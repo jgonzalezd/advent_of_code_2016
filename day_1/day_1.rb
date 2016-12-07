@@ -15,8 +15,9 @@ require 'byebug'
 
 tx = 0
 ty = 0
-coordinates = []
+lines = []
 curr_dir = ''
+last_coordinate = nil
 
 data = File.open('day_1_input_2.txt') {|f| f.readline.strip }
 data.split(',').each do |direction|
@@ -48,11 +49,48 @@ data.split(',').each do |direction|
   when 'L'
     tx -= l
   end
-  if coordinates.include? [tx, ty]
-    p [tx, ty]
-  else
-    coordinates << [tx, ty]
+
+
+  last_coordinate ||= [0,0]
+
+
+
+  if lines.size > 0
+    flag = false
+    case curr_dir
+    when 'N', 'S'
+      x = tx
+      ys = last_coordinate[1].downto(ty)
+      flag = ys.any? do |y|
+        # for each coordinate [x,y]
+        lines.any? do |line|
+          # Does this line contains [x,y]
+          (line.first[0]..line.last[0]).include?(x) && (line.first[1]..line.last[1]).include?(y)
+        end
+      end
+    when 'R', 'L'
+      y = ty
+      xs = last_coordinate[0].downto(tx)
+      flag = xs.any? do |x|
+        # for each coordinate [x,y]
+        lines.any? do |line|
+          # Does this line contains [x,y]
+          (line.first[0]..line.last[0]).include?(x) && (line.first[1]..line.last[1]).include?(y)
+        end
+      end
+    end
+    if flag
+      p [tx, ty]
+      p "distance #{tx.abs + ty.abs}"
+      break
+    end
+
   end
+  lines << [last_coordinate, [tx, ty]]
+  last_coordinate = [tx, ty]
+
+
+
 end
 
 p (tx.abs + ty.abs)
