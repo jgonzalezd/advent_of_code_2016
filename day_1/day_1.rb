@@ -15,11 +15,13 @@ require 'byebug'
 
 tx = 0
 ty = 0
-lines = []
 curr_dir = ''
 last_coordinate = nil
 
-data = File.open('day_1_input_2.txt') {|f| f.readline.strip }
+coordinates = []
+reapeated_coor = nil
+
+data = File.open('day_1_input.txt') {|f| f.readline.strip }
 data.split(',').each do |direction|
   # p direction
   d,l = direction.strip.scan(/^([LR])(\d+)$/).flatten
@@ -50,46 +52,45 @@ data.split(',').each do |direction|
     tx -= l
   end
 
-
   last_coordinate ||= [0,0]
 
+  # --- Part Two ---
+  # Then, you notice the instructions continue on the back of the Recruiting Document. Easter Bunny HQ is actually at the first location you visit twice.
+  # For example, if your instructions are R8, R4, R4, R8, the first location you visit twice is 4 blocks away, due East.
+  # How many blocks away is the first location you visit twice?
 
-
-  if lines.size > 0
-    flag = false
-    case curr_dir
-    when 'N', 'S'
-      x = tx
-      ys = last_coordinate[1].downto(ty)
-      flag = ys.any? do |y|
-        # for each coordinate [x,y]
-        lines.any? do |line|
-          # Does this line contains [x,y]
-          (line.first[0]..line.last[0]).include?(x) && (line.first[1]..line.last[1]).include?(y)
-        end
-      end
-    when 'R', 'L'
-      y = ty
-      xs = last_coordinate[0].downto(tx)
-      flag = xs.any? do |x|
-        # for each coordinate [x,y]
-        lines.any? do |line|
-          # Does this line contains [x,y]
-          (line.first[0]..line.last[0]).include?(x) && (line.first[1]..line.last[1]).include?(y)
-        end
+  case curr_dir
+  when 'N', 'S'
+    x = tx
+    ys = last_coordinate[1].step(ty, -(last_coordinate[1] <=> ty))
+    ys.drop(1).map do |y|
+      # save each coordinate [x,y]
+      if coordinates.include? [x,y]
+        reapeated_coor = [x,y]
+      else
+        coordinates << [x,y]
       end
     end
-    if flag
-      p [tx, ty]
-      p "distance #{tx.abs + ty.abs}"
-      break
+  when 'R', 'L'
+    y = ty
+    xs = last_coordinate[0].step(tx, -(last_coordinate[0] <=> tx))
+    xs.drop(1).map do |x|
+      # save each coordinate [x,y]
+      if coordinates.include? [x,y]
+        reapeated_coor = [x,y]
+      else
+        coordinates << [x,y]
+      end
     end
-
   end
-  lines << [last_coordinate, [tx, ty]]
+
+  if reapeated_coor
+    p reapeated_coor
+    p "dist #{reapeated_coor[0].abs + reapeated_coor[1].abs}"
+    exit
+  end
+
   last_coordinate = [tx, ty]
-
-
 
 end
 
