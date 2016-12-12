@@ -28,8 +28,8 @@ require 'byebug'
 
 def search_pass(keyboard)
   current_key = nil
-  data = File.open('input.txt') do |f|
-    f.each_with_index do |line, i|
+  File.open('input.txt') do |f|
+    f.each do |line|
       line.strip.split("").each do |next_key|
         current_key ||= 5
         key = keyboard[current_key][next_key.to_sym]
