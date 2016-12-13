@@ -83,13 +83,13 @@ def decompress(line_a)
   str = ""
   while line_a.size > 0 && index < line_a.size do
     char = line_a[index]
-    puts '--------------------progress-------------------------'
-    puts "line size => #{line_a.size}"
-    puts "char =>  #{char}"
+    # puts '--------------------progress-------------------------'
+    # puts "line size => #{line_a.size}"
+    # puts "char =>  #{char}"
     # p line_a.take(index).join
-    puts "marker start => "+ marker.to_s
+    # puts "marker start => "+ marker.to_s
     if marker && marker.complete?
-      puts 'marker complete => '+marker.to_s
+      # puts 'marker complete => '+marker.to_s
       line_a.shift(index)
       str_to_add = line_a.shift(marker.string_size).join
       # puts "adds #{str_to_add} #{marker.times.to_s} times"
@@ -120,13 +120,38 @@ loop do
   input_file = File.open('input.txt')
   initial_size = File.size('input.txt')
   puts "Starting. File size #{initial_size}"
-  str = ""
-  input_file.each_line do |line|
-    line_a = line.strip.split("")
-    str << decompress(line_a)
+  num_of_chunks = nil
+  times = nil
+  buffer = ""
+  marker = nil
+  input_file.each(nil, 1) do |chunk|
+    if num_of_chunks && num_of_chunks > 0
+      num_of_chunks -= 1
+      buffer << chunk
+      next if num_of_chunks > 0
+    end
+
+    if buffer.size > 0
+      output_file.write(buffer * times)
+      times = nil
+      num_of_chunks = nil
+      buffer = ""
+      marker = nil
+      next
+    end
+
+    marker = Marker.new if chunk == "(" && marker.nil?
+    marker.nil? ? output_file.write(chunk) : marker << chunk
+
+    if marker && marker.complete?
+      num_of_chunks = marker.string_size
+      times = marker.times
+      marker.clean
+    end
   end
   input_file.close
-  output_file.write(str)
+  output_file.close
+
   final_size = File.size('output.txt')
   break if initial_size == final_size
   puts "Finished File size #{final_size}"
@@ -135,9 +160,11 @@ loop do
 end
 
 
-chunk_size = 1024
+chunk_size = 1
 total_decompressed = 0
 output_file = File.open('output.txt').each(nil, chunk_size) do |chunk|
+  next if chunk == "\n"
   total_decompressed += chunk.size
 end
+puts "total: #{total_decompressed}"
 output_file.close
