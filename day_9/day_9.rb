@@ -76,7 +76,7 @@ class Marker
   end
 end
 
-def decompress(line_a, file = nil)
+def decompress(line_a)
   marker = nil
   index = 0
   char = nil
@@ -86,15 +86,15 @@ def decompress(line_a, file = nil)
     puts '--------------------progress-------------------------'
     puts "line size => #{line_a.size}"
     puts "char =>  #{char}"
-    p line_a.take(index).join
+    # p line_a.take(index).join
     puts "marker start => "+ marker.to_s
     if marker && marker.complete?
       puts 'marker complete => '+marker.to_s
       line_a.shift(index)
       str_to_add = line_a.shift(marker.string_size).join
-      str << decompress(str_to_add.strip.split(""))
-      puts "adds #{str_to_add} #{marker.times.to_s} times"
+      # puts "adds #{str_to_add} #{marker.times.to_s} times"
       str << str_to_add * marker.times
+
       marker.clean
       index = 0
       next
@@ -102,11 +102,10 @@ def decompress(line_a, file = nil)
       marker = Marker.new if char == "(" && marker.nil?
       marker.nil? ? str << char : marker << char
       index += 1
-      puts "marker end =>"+marker.to_s
-      puts "index =>"+index.to_s
+      # puts "marker end =>"+marker.to_s
+      # puts "index =>"+index.to_s
     end
   end
-  file.write(str) unless file.nil?
   str
 end
 
@@ -114,28 +113,31 @@ end
 # Starts here
 
 
-input_file = File.open('input.txt')
-output_file = File.open('output.txt','w')
-str = ""
 
-input_file.each_line do |line|
-  line_a = line.strip.split("")
-  begin
-    decompress(line_a, output_file)
-  rescue IOError => e
-    puts 'ERROR: something happened while processing.'
-  ensure
-    output_file.close
+
+loop do
+  output_file = File.open('output.txt','w')
+  input_file = File.open('input.txt')
+  initial_size = File.size('input.txt')
+  puts "Starting. File size #{initial_size}"
+  str = ""
+  input_file.each_line do |line|
+    line_a = line.strip.split("")
+    str << decompress(line_a)
   end
+  input_file.close
+  output_file.write(str)
+  final_size = File.size('output.txt')
+  break if initial_size == final_size
+  puts "Finished File size #{final_size}"
+  File.delete('input.txt')
+  File.rename('output.txt', 'input.txt')
 end
-input_file.close
 
-p str.size
+
 chunk_size = 1024
 total_decompressed = 0
 output_file = File.open('output.txt').each(nil, chunk_size) do |chunk|
   total_decompressed += chunk.size
 end
 output_file.close
-
-p "Total decompressed PART II #{total_decompressed}"
