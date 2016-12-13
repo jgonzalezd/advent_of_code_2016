@@ -76,34 +76,29 @@ class Marker
   end
 end
 
-file = File.open('input.txt')
-marker = nil
-str = ""
-
-file.each_line do |line|
-  line_a = line.strip.split("")
+def decompress(line_a, file = nil)
+  marker = nil
   index = 0
   char = nil
-  while line_a.size > 0 do
-    # byebug if index == 0
+  str = ""
+  while line_a.size > 0 && index < line_a.size do
     char = line_a[index]
     puts '--------------------progress-------------------------'
     puts "line size => #{line_a.size}"
     puts "char =>  #{char}"
     p line_a.take(index).join
-    p "marker start => "+ marker.to_s
+    puts "marker start => "+ marker.to_s
     if marker && marker.complete?
       puts 'marker complete => '+marker.to_s
       line_a.shift(index)
       str_to_add = line_a.shift(marker.string_size).join
+      str << decompress(str_to_add.strip.split(""))
       puts "adds #{str_to_add} #{marker.times.to_s} times"
       str << str_to_add * marker.times
-
       marker.clean
       index = 0
       next
     else
-      marker.to_s
       marker = Marker.new if char == "(" && marker.nil?
       marker.nil? ? str << char : marker << char
       index += 1
@@ -111,7 +106,36 @@ file.each_line do |line|
       puts "index =>"+index.to_s
     end
   end
+  file.write(str) unless file.nil?
+  str
 end
-file.close
+
+
+# Starts here
+
+
+input_file = File.open('input.txt')
+output_file = File.open('output.txt','w')
+str = ""
+
+input_file.each_line do |line|
+  line_a = line.strip.split("")
+  begin
+    decompress(line_a, output_file)
+  rescue IOError => e
+    puts 'ERROR: something happened while processing.'
+  ensure
+    output_file.close
+  end
+end
+input_file.close
 
 p str.size
+chunk_size = 1024
+total_decompressed = 0
+output_file = File.open('output.txt').each(nil, chunk_size) do |chunk|
+  total_decompressed += chunk.size
+end
+output_file.close
+
+p "Total decompressed PART II #{total_decompressed}"
