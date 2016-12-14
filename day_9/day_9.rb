@@ -20,9 +20,7 @@ require 'byebug'
 
 class Marker
   REGEX = /\A(\()(\d*)(x?)(\d*)(\)?)\z/
-
   attr_reader :builder
-
 
   def initialize(str=nil)
     if str.nil?
@@ -76,45 +74,33 @@ class Marker
   end
 end
 
-def decompress(line_a)
-  marker = nil
-  index = 0
-  char = nil
-  str = ""
-  while line_a.size > 0 && index < line_a.size do
-    char = line_a[index]
-    # puts '--------------------progress-------------------------'
-    # puts "line size => #{line_a.size}"
-    # puts "char =>  #{char}"
-    # p line_a.take(index).join
-    # puts "marker start => "+ marker.to_s
-    if marker && marker.complete?
-      # puts 'marker complete => '+marker.to_s
-      line_a.shift(index)
-      str_to_add = line_a.shift(marker.string_size).join
-      # puts "adds #{str_to_add} #{marker.times.to_s} times"
-      str << str_to_add * marker.times
-
-      marker.clean
-      index = 0
-      next
-    else
-      marker = Marker.new if char == "(" && marker.nil?
-      marker.nil? ? str << char : marker << char
-      index += 1
-      # puts "marker end =>"+marker.to_s
-      # puts "index =>"+index.to_s
-    end
-  end
-  str
-end
-
-
-# Starts here
+# Solution to Part I
+# def decompress(line_a)
+#   marker = nil
+#   index = 0
+#   char = nil
+#   str = ""
+#   while line_a.size > 0 && index < line_a.size do
+#     char = line_a[index]
+#     if marker && marker.complete?
+#       line_a.shift(index)
+#       str_to_add = line_a.shift(marker.string_size).join
+#       str << str_to_add * marker.times #Instead of writing the string just count chars
+#       marker.clean
+#       index = 0
+#       next
+#     else
+#       marker = Marker.new if char == "(" && marker.nil?
+#       marker.nil? ? str << char : marker << char
+#       index += 1
+#     end
+#   end
+#   str
+# end
 
 
 
-
+# Writing file (Very inefficient) Part II
 loop do
   output_file = File.open('output.txt','w')
   input_file = File.open('input.txt')
